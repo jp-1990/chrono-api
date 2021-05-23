@@ -6,8 +6,9 @@ import mongoose from "mongoose";
 import { typeDefs } from "./typeDefs";
 import { resolvers } from "./resolvers";
 
+dotenv.config({ path: "./config.env" });
+
 async function startApolloServer() {
-  dotenv.config({ path: "./config.env" });
   const app = express();
   const server = new ApolloServer({
     typeDefs,
@@ -23,10 +24,12 @@ async function startApolloServer() {
     res.end();
   });
 
-  // connect to database and start server
+  // connect to database
   try {
+    // @ts-ignore
     const DB = process.env.DATABASE.replace(
       "<PASSWORD>",
+      // @ts-ignore
       process.env.DATABASE_PASSWORD
     );
     mongoose
