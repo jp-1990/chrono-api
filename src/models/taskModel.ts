@@ -1,7 +1,40 @@
-import mongoose from "mongoose";
+import mongoose, { Document, Types, Model } from "mongoose";
+import { UserBaseDocument } from "./userModel";
+import { DocumentResult } from "../types";
+
+export interface Task {
+  title: string;
+  group?: string;
+  description?: string;
+  colour?: string;
+  start: Date;
+  end: Date;
+  createdAt?: Date;
+  user: Types.ObjectId | Record<string, any>;
+}
+
+interface TaskBaseDocument
+  extends Task,
+    Document,
+    DocumentResult<TaskBaseDocument> {
+  _id: Types.ObjectId;
+  percentageTimes: {
+    startPercentage: number;
+    endPercentage: number;
+  };
+  cssSelector: string;
+  luminance: number;
+}
+
+export interface TaskDocument extends TaskBaseDocument {
+  user: UserBaseDocument["_id"];
+}
+export interface TaskPopulatedDocument extends TaskBaseDocument {
+  user: UserBaseDocument;
+}
 
 // TASK SCHEMA // --------
-const taskSchema = new mongoose.Schema(
+const taskSchema = new mongoose.Schema<TaskDocument, TaskModel>(
   {
     title: {
       type: String,
@@ -60,15 +93,13 @@ const taskSchema = new mongoose.Schema(
 );
 
 // VIRTUALS // --------
-taskSchema.virtual("percentageTimes").get(function () {
+taskSchema.virtual("percentageTimes").get(function (this: TaskBaseDocument) {
   const day = 24 * 60;
   const startTime = JSON.stringify(this.start.toLocaleTimeString())
     .replace(/"/g, "")
     .split(":");
 
-  // temp ts hack
   const start0 = Number(startTime[0]);
-  const start1 = Number(startTime[1]);
 
   if (startTime[2].slice(-2) === "PM" && start0 * 1 !== 12)
     startTime[0] = `${start0 + 12}`;
@@ -77,9 +108,7 @@ taskSchema.virtual("percentageTimes").get(function () {
     .replace(/"/g, "")
     .split(":");
 
-  // temp ts hack
   const end0 = Number(endTime[0]);
-  const end1 = Number(endTime[1]);
 
   if (endTime[2].slice(-2) === "PM" && end0 !== 12) endTime[0] = `${end0 + 12}`;
   const startMins = Number(startTime[0]) * 60 + Number(startTime[1]);
@@ -91,21 +120,22 @@ taskSchema.virtual("percentageTimes").get(function () {
   };
 });
 
-taskSchema.virtual("cssSelector").get(function () {
+taskSchema.virtual("cssSelector").get(function (this: TaskBaseDocument) {
   const target = this.title.replace(/[^a-zA-Z0-9]+/g, "");
 
   return target;
 });
 
-taskSchema.virtual("luminance").get(function () {
+taskSchema.virtual("luminance").get(function (this: TaskBaseDocument) {
   // Y = 0.299 R + 0.587 G + 0.114 B
   const [r, g, b] = this.colour.replace(/[^\d,]/g, "").split(",");
-  const luminance = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+  const luminance =
+    (Number(r) * 0.299 + Number(g) * 0.587 + Number(b) * 0.114) / 255;
   return luminance;
 });
 
 // PRE MIDDLEWARE // --------
-taskSchema.pre(/^find/, function (next) {
+taskSchema.pre<TaskBaseDocument>(/^find/, function (next) {
   this.populate({
     path: "user",
     select: "name",
@@ -114,6 +144,6 @@ taskSchema.pre(/^find/, function (next) {
 });
 
 // TASK MODEL // --------
-const Task = mongoose.model("Task", taskSchema);
+interface TaskModel extends Model<TaskDocument> {}
 
-export default Task;
+export default mongoose.model<TaskDocument, TaskModel>("Task", taskSchema);
