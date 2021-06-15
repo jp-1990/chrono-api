@@ -16,18 +16,12 @@ const books = [
 export const resolvers = {
   Query: {
     tasks() {
-      // @ts-ignore
       return Task.find().then((task) => {
-        // @ts-ignore
         return task.map((el) => {
-          // @ts-ignore
           return {
-            // @ts-ignore
             ...el._doc,
             id: el.id,
-            // @ts-ignore
             percentageTimes: el.percentageTimes,
-            // @ts-ignore
             luminance: el.luminance,
           };
         });
