@@ -1,10 +1,37 @@
 import crypto from "crypto";
-import mongoose from "mongoose";
+import mongoose, { Document, Types, Model, Query } from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
+import { DocumentResult } from "../types";
+
+export interface User {
+  name: string;
+  email: string;
+  photo?: string;
+  role?: string;
+  password: string;
+  passwordConfirm: string;
+  passwordChangedAt?: number;
+  passwordResetToken?: string;
+  passwordResetExpires?: number;
+  active?: boolean;
+}
+
+export interface UserBaseDocument
+  extends User,
+    Document,
+    DocumentResult<UserBaseDocument> {
+  _id: Types.ObjectId;
+  correctPassword: (inputPassword: string, userPassword: string) => boolean;
+  passwordChangedAfter: (
+    this: UserBaseDocument,
+    JWTTimeStamp: number
+  ) => boolean;
+  createPasswordResetToken: () => string;
+}
 
 // USER SCHEMA // --------
-const userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema<UserBaseDocument, UserModel>({
   name: {
     type: String,
     required: [true, "Please enter your name!"],
@@ -44,9 +71,9 @@ const userSchema = new mongoose.Schema({
       message: "Passwords are not the same!",
     },
   },
-  passwordChangedAt: Date,
+  passwordChangedAt: Number,
   passwordResetToken: String,
-  passwordResetExpires: Date,
+  passwordResetExpires: Number,
   active: {
     type: Boolean,
     default: true,
@@ -56,25 +83,28 @@ const userSchema = new mongoose.Schema({
 
 // PRE MIDDLEWARE // --------
 // hash the password if it has not already been hashed
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next;
+userSchema.pre<UserBaseDocument>(/save/, async function (next) {
+  if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 12);
   this.passwordConfirm = undefined;
   next();
 });
 
 // update 'password changed at'
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password") || this.isNew) return next;
+userSchema.pre<UserBaseDocument>(/save/, async function (next) {
+  if (!this.isModified("password") || this.isNew) return next();
   this.passwordChangedAt = Date.now() * 1000;
   next();
 });
 
 // only allow searches for active accounts
-userSchema.pre(/^find/, async function (next) {
-  this.find({ active: { $ne: false } });
-  next();
-});
+userSchema.pre<Query<UserBaseDocument, UserBaseDocument>>(
+  /^find/,
+  async function (next) {
+    this.find({ active: { $ne: false } });
+    next();
+  }
+);
 
 // INSTANCE METHODS // --------
 // checks if password input and saved password are equal
@@ -86,10 +116,13 @@ userSchema.methods.correctPassword = async function (
 };
 
 // checks if the password has been changed since the JWT was issued
-userSchema.methods.passwordChangedAfter = function (JWTTimeStamp) {
+userSchema.methods.passwordChangedAfter = function (
+  this: UserBaseDocument,
+  JWTTimeStamp: number
+) {
   if (this.passwordChangedAt) {
     const changedTimeStamp = parseInt(
-      this.passwordChangedAt.getTime() / 1000,
+      `${Number(new Date(this.passwordChangedAt).getTime()) / 1000}`,
       10
     );
     return JWTTimeStamp < changedTimeStamp;
@@ -98,7 +131,9 @@ userSchema.methods.passwordChangedAfter = function (JWTTimeStamp) {
 };
 
 // create a password reset token
-userSchema.methods.createPasswordResetToken = function () {
+userSchema.methods.createPasswordResetToken = function (
+  this: UserBaseDocument
+) {
   const resetToken = crypto.randomBytes(32).toString("hex"); // converts randomBytes to a hexidecimal string
 
   this.passwordResetToken = crypto
@@ -111,5 +146,6 @@ userSchema.methods.createPasswordResetToken = function () {
 };
 
 // CREATE MODEL // --------
-const User = mongoose.model("User", userSchema);
-export default User;
+interface UserModel extends Model<UserBaseDocument> {}
+
+export default mongoose.model<UserBaseDocument, UserModel>("User", userSchema);
