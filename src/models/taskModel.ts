@@ -80,10 +80,9 @@ const taskSchema = new mongoose.Schema<TaskDocument, TaskModel>(
       select: false,
     },
     user: {
-      type: String,
-      // type: mongoose.Schema.Types.ObjectId,
-      // ref: "User",
-      // required: [true, "A task must belong to a user"],
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "A task must belong to a user"],
     },
   },
   {

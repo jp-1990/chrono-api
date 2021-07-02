@@ -5,12 +5,12 @@ import bcrypt from "bcryptjs";
 import { DocumentResult } from "../types";
 
 export interface User {
-  name: string;
+  name?: string;
   email: string;
   photo?: string;
   role?: string;
   password: string;
-  passwordConfirm: string;
+  passwordConfirm?: string;
   passwordChangedAt?: number;
   passwordResetToken?: string;
   passwordResetExpires?: number;
@@ -22,12 +22,15 @@ export interface UserBaseDocument
     Document,
     DocumentResult<UserBaseDocument> {
   _id: Types.ObjectId;
-  correctPassword: (inputPassword: string, userPassword: string) => boolean;
-  passwordChangedAfter: (
+  correctPassword?: (
+    inputPassword: string,
+    userPassword: string
+  ) => Promise<boolean>;
+  passwordChangedAfter?: (
     this: UserBaseDocument,
     JWTTimeStamp: number
   ) => boolean;
-  createPasswordResetToken: () => string;
+  createPasswordResetToken?: () => string;
 }
 
 // USER SCHEMA // --------
