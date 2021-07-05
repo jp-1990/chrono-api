@@ -1,5 +1,6 @@
-export const typeDef = `type PercentageTimes {
-startPercentage: Float
+export const typeDef = `
+type PercentageTimes {
+  startPercentage: Float
   endPercentage: Float
 }
 
@@ -9,8 +10,8 @@ type Task {
   group: String
   description: String
   colour: String
-  start: String
-  end: String
+  start: String!
+  end: String!
   createdAt: String
   user: ReducedUser
   percentageTimes: PercentageTimes
@@ -19,6 +20,17 @@ type Task {
 
 extend type Query {
   tasks: [Task]
+}
+
+extend type Mutation {
+  createTask(        
+    title: String!,
+    group: String,
+    description: String,
+    start: String!,
+    end: String!,
+    colour: String
+    ):Task 
 }
 
 `;

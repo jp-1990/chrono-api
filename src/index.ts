@@ -4,14 +4,14 @@ import { ApolloServer } from "apollo-server-express";
 import mongoose from "mongoose";
 import { merge } from "lodash";
 
-import { Query, UserTypeDef, TaskTypeDef } from "./typeDefs";
+import { Base, UserTypeDef, TaskTypeDef } from "./typeDefs";
 import { userResolvers, taskResolvers } from "./resolvers";
 import { setUserContext } from "./utils";
 
 async function startApolloServer() {
   const app = express();
   const server = new ApolloServer({
-    typeDefs: [Query, UserTypeDef, TaskTypeDef],
+    typeDefs: [Base, UserTypeDef, TaskTypeDef],
     resolvers: merge(userResolvers, taskResolvers),
     context: async ({ req }) => {
       const user = await setUserContext(req);
