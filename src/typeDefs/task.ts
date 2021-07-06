@@ -18,6 +18,10 @@ type Task {
   luminance: Float
 }
 
+type TaskId {
+  id:ID
+}
+
 extend type Query {
   tasks: [Task]
 }
@@ -30,7 +34,25 @@ extend type Mutation {
     start: String!,
     end: String!,
     colour: String
-    ):Task 
+    ):Task
+   
+  updateTask(
+    id:String!
+    title: String,
+    description: String,
+    start: String,
+    end: String,
+  ):Task
+
+updateTaskColourAndGroup(
+  title:String!
+  colour:String
+  group:String
+):[Task]
+
+  deleteTask(
+    id:String!
+  ):TaskId
 }
 
 `;
