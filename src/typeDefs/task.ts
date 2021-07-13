@@ -24,6 +24,7 @@ type TaskId {
 
 extend type Query {
   tasks: [Task]
+  findTasks(scope:Int):[Task]
 }
 
 extend type Mutation {

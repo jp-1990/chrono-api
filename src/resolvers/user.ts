@@ -13,13 +13,13 @@ export const resolvers = {
       }: { email: string | undefined; password: string | undefined }
     ) {
       if (!email || !password)
-        throw new ApolloError("Email or password not provided!");
+        throw new ApolloError("Email or password missing");
 
       const user: UserBaseDocument = await User.findOne({ email }).select(
         "+password"
       );
       if (!user || !(await user.correctPassword(password, user.password))) {
-        throw new ApolloError("Please provide correct email and password!");
+        throw new ApolloError("Email or password incorrect");
       }
 
       return createSignJWT(user);

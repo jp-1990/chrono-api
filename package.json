@@ -26,6 +26,7 @@
     "graphql": "^15.5.0",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.21",
+    "moment": "^2.29.1",
     "mongoose": "^5.12.10",
     "validator": "^13.6.0"
   },

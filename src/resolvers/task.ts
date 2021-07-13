@@ -1,4 +1,5 @@
 import { ApolloError } from "apollo-server-errors";
+import moment from "moment";
 
 import Task from "../models/taskModel";
 import { UserBaseDocument } from "../models/userModel";
@@ -42,6 +43,27 @@ export const resolvers = {
 
       //@ts-expect-error no idea
       const tasks = await Task.find({ user: { _id: ctx.user._id } }).sort({
+        start: 1,
+      });
+
+      return tasks.map((el) => {
+        return {
+          ...el._doc,
+          id: el.id,
+          percentageTimes: el.percentageTimes,
+          luminance: el.luminance,
+        };
+      });
+    },
+    // get tasks for user based on args
+    async findTasks(_, args: { scope: number | undefined }, ctx: CtxType) {
+      if (!ctx.user) throw new ApolloError("Unauthorized access!");
+
+      const tasks = await Task.find({
+        //@ts-expect-error no idea
+        user: { _id: ctx.user._id },
+        start: { $gte: moment().subtract(args.scope || 40, "days") },
+      }).sort({
         start: 1,
       });
 
