@@ -4,6 +4,7 @@ import User, { UserBaseDocument } from "../models/userModel";
 export const setUserContext = async (req: any) => {
   const token = req.headers.authorization;
   let user: UserBaseDocument | undefined = undefined;
+  if (!token) return { user };
   // verify jwt
   try {
     const verifiedToken = jwt.verify(token, process.env.JWT_SECRET);

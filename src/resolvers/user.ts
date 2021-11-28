@@ -4,7 +4,7 @@ import User, { UserBaseDocument } from "../models/userModel";
 import { createSignJWT } from "../utils";
 
 export const resolvers = {
-  Query: {
+  Mutation: {
     async signIn(
       _,
       {
