@@ -23,8 +23,8 @@ type TaskId {
 }
 
 extend type Query {
-  tasks: [Task]
-  scopedTasks(scope:Int):[Task]
+  allTasks: [Task]
+  tasks(scope:Int startDate:String endDate:String comparePrev:Boolean):[Task]
 }
 
 extend type Mutation {
