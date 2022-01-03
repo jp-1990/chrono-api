@@ -22,5 +22,6 @@ type AuthenticatedUser {
 
 extend type Mutation {
   signIn(email: String!, password: String!): AuthenticatedUser
+  registerUser(name:String!, email:String!, password:String!, passwordConfirm:String!): Boolean
 }
 `;

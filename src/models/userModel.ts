@@ -1,8 +1,8 @@
-import crypto from "crypto";
-import mongoose, { Document, Types, Model, Query } from "mongoose";
-import validator from "validator";
-import bcrypt from "bcryptjs";
-import { DocumentResult } from "../types";
+import crypto from 'crypto';
+import mongoose, { Document, Types, Model, Query } from 'mongoose';
+import validator from 'validator';
+import bcrypt from 'bcryptjs';
+import { DocumentResult } from '../types';
 
 export interface User {
   name?: string;
@@ -37,46 +37,50 @@ export interface UserBaseDocument
 const userSchema = new mongoose.Schema<UserBaseDocument, UserModel>({
   name: {
     type: String,
-    required: [true, "Please enter your name!"],
+    required: [true, 'Please enter your name!'],
     trim: true,
   },
   email: {
     type: String,
-    required: [true, "Please provide your email!"],
+    required: [true, 'Please provide your email!'],
     unique: true,
     trim: true,
     lowercase: true,
-    validate: [validator.isEmail, "Please provide a valid email!"],
+    validate: [validator.isEmail, 'Please provide a valid email!'],
   },
   photo: {
     type: String,
-    default: "default.jpg",
+    default: 'default.jpg',
   },
   role: {
     type: String,
-    enum: ["user", "admin"],
-    default: "user",
+    enum: ['user', 'admin'],
+    default: 'user',
   },
   password: {
     type: String,
-    required: [true, "Please provide a password!"],
+    required: [true, 'Please provide a password!'],
     minlength: 8,
     select: false,
   },
   passwordConfirm: {
     type: String,
-    required: [true, "Please confirm your password!"],
+    required: [true, 'Please confirm your password!'],
     validate: {
       // This only works on create() and save()
       validator: function (el) {
         return el === this.password;
       },
-      message: "Passwords are not the same!",
+      message: 'Passwords are not the same!',
     },
   },
   passwordChangedAt: Number,
   passwordResetToken: String,
   passwordResetExpires: Number,
+  verified: {
+    type: Boolean,
+    default: false,
+  },
   active: {
     type: Boolean,
     default: true,
@@ -87,7 +91,7 @@ const userSchema = new mongoose.Schema<UserBaseDocument, UserModel>({
 // PRE MIDDLEWARE // --------
 // hash the password if it has not already been hashed
 userSchema.pre<UserBaseDocument>(/save/, async function (next) {
-  if (!this.isModified("password")) return next();
+  if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
   this.passwordConfirm = undefined;
   next();
@@ -95,7 +99,7 @@ userSchema.pre<UserBaseDocument>(/save/, async function (next) {
 
 // update 'password changed at'
 userSchema.pre<UserBaseDocument>(/save/, async function (next) {
-  if (!this.isModified("password") || this.isNew) return next();
+  if (!this.isModified('password') || this.isNew) return next();
   this.passwordChangedAt = Date.now() * 1000;
   next();
 });
@@ -137,12 +141,12 @@ userSchema.methods.passwordChangedAfter = function (
 userSchema.methods.createPasswordResetToken = function (
   this: UserBaseDocument
 ) {
-  const resetToken = crypto.randomBytes(32).toString("hex"); // converts randomBytes to a hexidecimal string
+  const resetToken = crypto.randomBytes(32).toString('hex'); // converts randomBytes to a hexidecimal string
 
   this.passwordResetToken = crypto
-    .createHash("sha256")
+    .createHash('sha256')
     .update(resetToken)
-    .digest("hex");
+    .digest('hex');
 
   this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
   return resetToken;
@@ -151,4 +155,4 @@ userSchema.methods.createPasswordResetToken = function (
 // CREATE MODEL // --------
 interface UserModel extends Model<UserBaseDocument> {}
 
-export default mongoose.model<UserBaseDocument, UserModel>("User", userSchema);
+export default mongoose.model<UserBaseDocument, UserModel>('User', userSchema);

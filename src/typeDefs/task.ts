@@ -45,11 +45,11 @@ extend type Mutation {
     end: String,
   ):Task
 
-updateTaskColourAndGroup(
+  updateTaskColourAndGroup(
   title:String!
   colour:String
   group:String
-):[Task]
+  ):[Task]
 
   deleteTask(
     id:String!
